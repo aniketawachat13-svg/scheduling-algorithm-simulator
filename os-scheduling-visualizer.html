@@ -1,0 +1,168 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OS Scheduling Visualizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B1120;--bg2:#111827;--card:#172033;--bd:#263247;--ac:#3B82F6;--ac2:#6366F1;--ok:#22C55E;--wa:#F59E0B;--er:#EF4444;--tx:#F8FAFC;--tx2:#94A3B8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px Inter,system-ui,sans-serif}
+button,input{font:inherit;color:inherit}.hide{display:none!important}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:18px;box-shadow:0 4px 18px #0004;animation:up .4s both}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+.btn{background:var(--ac);border:0;border-radius:10px;padding:9px 16px;font-weight:600;cursor:pointer;transition:.2s}.btn:hover{background:#2563EB;transform:translateY(-1px)}
+.btn.s{background:transparent;border:1px solid var(--bd);color:var(--tx2)}.btn.s:hover{background:var(--bg2);color:var(--tx)}.btn.sm{padding:6px 11px;font-size:13px}
+h1,h2,h3{margin:0}h3{font-size:15px;margin-bottom:12px}.mut{color:var(--tx2)}
+#landing{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;position:relative;overflow:hidden}
+#landing h1{font-size:clamp(40px,8vw,84px);font-weight:800;line-height:1;letter-spacing:-2px;z-index:1}
+#landing h1 span{background:linear-gradient(90deg,var(--ac),var(--ac2));-webkit-background-clip:text;color:transparent}
+#landing p{max-width:520px;color:var(--tx2);font-size:17px;z-index:1}#landing .row{display:flex;gap:12px;z-index:1;flex-wrap:wrap;justify-content:center}
+#bg{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:14px;opacity:.13}
+#bg div{height:34px;display:flex;gap:6px;animation:slide 14s linear infinite alternate}#bg i{border-radius:6px;height:100%}
+@keyframes slide{from{transform:translateX(-5%)}to{transform:translateX(5%)}}
+header{padding:20px 24px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+header h2{font-size:20px}main{max-width:1280px;margin:0 auto;padding:20px}
+.grid{display:grid;grid-template-columns:330px 1fr;gap:18px}@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.alg{display:flex;align-items:center;gap:10px;border:1px solid var(--bd);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:.2s;background:var(--bg2)}
+.alg.on{border-color:var(--ac);background:#3B82F61a}.alg:hover{transform:translateX(3px)}.alg b{flex:1}.alg small{color:var(--tx2)}
+.chk{width:18px;height:18px;border:2px solid var(--bd);border-radius:5px;display:grid;place-items:center;font-size:12px}.on .chk{background:var(--ac);border-color:var(--ac)}
+table{width:100%;border-collapse:collapse}th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}th{color:var(--tx2);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px}th.so{cursor:pointer}
+.sc{overflow-x:auto}td.best{color:var(--ok);font-weight:700;background:#22C55E14}
+input[type=text],input[type=number]{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:7px 9px;width:80px;text-align:right;outline:0}
+input:focus{border-color:var(--ac)}input.bad{border-color:var(--er);background:#EF44441a}input:disabled{opacity:.35}
+td input{width:70px}td:first-child input{text-align:left}
+#err{color:var(--er);margin:10px 0;font-size:13px}#err div{margin:2px 0}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:22px 0 16px}.tab{padding:9px 16px;border-radius:10px;border:1px solid var(--bd);background:var(--bg2);cursor:pointer;color:var(--tx2);font-weight:600}
+.tab.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;animation:pop .4s both;transition:.2s}.stat:hover{border-color:var(--ac);transform:translateY(-2px)}
+.stat small{color:var(--tx2)}.stat div{font-size:26px;font-weight:700;margin-top:4px}.stat div u{text-decoration:none;font-size:13px;color:var(--tx2);font-weight:500}
+.cpu{display:grid;grid-template-columns:200px 1fr;gap:18px;align-items:start}@media(max-width:700px){.cpu{grid-template-columns:1fr}}
+.run{border:2px solid var(--ac);border-radius:14px;padding:16px;text-align:center;min-height:120px;animation:pop .25s both}.run.idle{border-style:dashed;border-color:var(--bd);color:var(--tx2)}
+.run b{font-size:34px;display:block}.chip{display:inline-block;padding:6px 12px;border-radius:8px;margin:3px;font-weight:700;color:#0B1120;animation:pop .25s both}
+.ctl{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center}select{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:7px;color:var(--tx)}
+.gantt{display:flex;overflow-x:auto;padding:6px 0 26px}.gc{flex:1 1 0;min-width:34px;position:relative}
+.gb{height:46px;margin-right:2px;border-radius:6px;display:grid;place-items:center;font-weight:700;color:#0B1120;opacity:.28;transform-origin:left;transition:.3s;animation:grow .5s both}
+.gb.idle{background:repeating-linear-gradient(45deg,#263247,#263247 6px,#1c2740 6px,#1c2740 12px)!important;color:var(--tx2)}
+.gb.past{opacity:1}.gb.cur{opacity:1;box-shadow:0 0 0 2px #fff,0 0 14px #fff6;transform:scaleY(1.12)}
+@keyframes grow{from{transform:scaleX(0)}}
+.gt{position:absolute;top:50px;left:-5px;font-size:11px;color:var(--tx2)}.gt.e{left:auto;right:-3px}
+.bar{display:flex;align-items:center;gap:10px;margin:7px 0}.bar span:first-child{width:80px;color:var(--tx2)}.bar .tr{flex:1;background:var(--bg);border-radius:6px;height:22px;overflow:hidden}
+.bar .f{height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));transition:width .9s;border-radius:6px}.bar .f.b{background:var(--ok)}.bar span:last-child{width:50px;text-align:right}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:16px}
+.rec h2{font-size:30px;color:var(--ac)}.ok{color:var(--ok)}.wa{color:var(--wa)}
+.sl{display:grid;grid-template-columns:130px 1fr 24px;gap:10px;align-items:center;margin:6px 0}input[type=range]{accent-color:var(--ac);width:100%}
+.win{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd)}.win b{color:var(--ac)}
+.tag{font-size:11px;padding:3px 8px;border-radius:20px;background:#6366F133;color:#A5B4FC}ul{margin:6px 0;padding-left:20px}
+#load{position:fixed;inset:0;background:#0B1120cc;display:grid;place-items:center;z-index:9}.sp{width:44px;height:44px;border:4px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:r .7s linear infinite}@keyframes r{to{transform:rotate(1turn)}}
+.empty{text-align:center;color:var(--tx2);padding:28px}
+</style></head><body>
+<section id="landing"><div id="bg"></div>
+<h1>OS SCHEDULING<br><span>VISUALIZER</span></h1><p>Simulate, visualize, compare, and analyze CPU scheduling algorithms in real time.</p>
+<div class="row"><button class="btn" onclick="start()">Start Simulation →</button><button class="btn s" onclick="sample();start()">Load Sample Data</button></div></section>
+
+<div id="app" class="hide"><header><div><h2>OS Scheduling Visualizer</h2><span class="mut">Compare • Calculate • Visualize • Analyze</span></div><button class="btn s sm" onclick="location.reload()">⌂ Home</button></header>
+<main><div class="grid">
+<div class="card"><h3>Algorithms</h3><div id="algs"></div>
+<div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn s sm" onclick="selAll(1)">Select All</button><button class="btn s sm" onclick="selAll(0)">Deselect All</button></div>
+<div id="qbox" class="hide" style="margin-bottom:12px"><label class="mut">Time Quantum <span title="Max CPU time a process gets per turn in Round Robin">ⓘ</span></label> <input type="number" id="q" value="2" min="1"></div>
+<button class="btn" style="width:100%" onclick="run()">RUN ▶</button><div id="err"></div></div>
+<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px"><h3 style="margin:0">Process Table</h3>
+<div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" onclick="addP()">+ Add Process</button><button class="btn s sm" onclick="sample()">Sample</button><button class="btn s sm" onclick="sample()">Reset All</button><button class="btn s sm" onclick="procs=[];tbl()">Clear All</button></div></div>
+<div class="sc"><table><thead><tr><th>Process ID</th><th>Arrival Time</th><th>Burst Time</th><th>Priority <span title="Lower number = higher priority">ⓘ</span></th><th></th></tr></thead><tbody id="tb"></tbody></table></div></div></div>
+<div id="res" class="hide"><div class="tabs" id="tabs"></div><div id="view"></div></div></main></div>
+<div id="load" class="hide"><div class="sp"></div></div>
+
+<script>
+const $=s=>document.querySelector(s),f2=n=>n.toFixed(2),ORD=['FCFS','SJF','SRTF','RR','PRIO'];
+const NM={FCFS:'FCFS',SJF:'SJF',SRTF:'SRTF',RR:'Round Robin',PRIO:'Priority'};
+const INFO={FCFS:['Non-preemptive','Process that arrived first runs first.',['Simple to implement','No starvation'],['Convoy effect','Poor average waiting time'],'Batch systems with similar job lengths.'],
+SJF:['Non-preemptive','Among arrived processes, shortest burst runs next.',['Minimal average waiting time (non-preemptive)','Great for short jobs'],['Starvation of long jobs','Needs burst-time knowledge'],'Batch workloads with known run times.'],
+SRTF:['Preemptive','Process with the shortest remaining burst time executes; new arrivals may preempt.',['Can reduce average waiting time','Efficient for short jobs'],['More context switching','Possible starvation of long processes'],'When minimizing waiting and turnaround time matters.'],
+RR:['Preemptive','Each process gets a fixed time quantum in circular queue order.',['Fair CPU sharing','Good response time','No starvation'],['More context switches','Performance depends on quantum'],'Time-sharing / interactive systems.'],
+PRIO:['Non-preemptive (extensible)','Lowest priority number runs first; ties by arrival then ID.',['Prioritizes important tasks','Flexible'],['Starvation of low-priority tasks','Needs aging to be fair'],'Systems with critical vs background tasks.']};
+let procs=[],sel=new Set(['FCFS','SJF','SRTF','RR','PRIO']),R={},cmap={},cur='',an={t:0,sp:1,tm:null},W={wt:8,tat:6,rt:6,cs:3,fair:3,util:2},sortK='';
+const cid=(a,b)=>a.id.localeCompare(b.id,undefined,{numeric:true});
+function start(){$('#landing').classList.add('hide');$('#app').classList.remove('hide');if(!procs.length)sample();algs();tbl()}
+function sample(){procs=[[0,5,2],[1,3,1],[2,8,3],[3,6,2],[4,2,1]].map((x,i)=>({id:'P'+(i+1),at:x[0],bt:x[1],pr:x[2]}));tbl()}
+function algs(){$('#algs').innerHTML=ORD.map(k=>`<div class="alg ${sel.has(k)?'on':''}" onclick="tg('${k}')" title="${INFO[k][1]}"><span class="chk">${sel.has(k)?'✓':''}</span><b>${NM[k]}</b><small>${INFO[k][0].split(' ')[0]}</small></div>`).join('');
+$('#qbox').classList.toggle('hide',!sel.has('RR'));tbl()}
+const tg=k=>{sel.has(k)?sel.delete(k):sel.add(k);algs()},selAll=v=>{sel=new Set(v?ORD:[]);algs()};
+function tbl(){const pe=sel.has('PRIO');$('#tb').innerHTML=procs.length?procs.map((p,i)=>`<tr><td><input type="text" value="${p.id}" onchange="procs[${i}].id=this.value.trim()"></td>
+<td><input type="number" min="0" value="${p.at}" onchange="procs[${i}].at=this.value"></td><td><input type="number" min="1" value="${p.bt}" onchange="procs[${i}].bt=this.value"></td>
+<td><input type="number" min="1" value="${p.pr}" ${pe?'':'disabled'} onchange="procs[${i}].pr=this.value"></td><td><button class="btn s sm" onclick="procs.splice(${i},1);tbl()">✕</button></td></tr>`).join(''):
+`<tr><td colspan="5" class="empty">No processes added yet.<br>Add your first process or load sample data.</td></tr>`}
+function addP(){let n=procs.length+1;while(procs.some(p=>p.id==='P'+n))n++;procs.push({id:'P'+n,at:0,bt:1,pr:1});tbl()}
+function validate(){const e=[],ids=new Set();if(!procs.length)e.push('Add at least one process.');if(!sel.size)e.push('Select at least one algorithm.');
+[...document.querySelectorAll('#tb tr')].forEach((tr,i)=>{const p=procs[i];if(!p)return;const[a,b,c,d]=[...tr.querySelectorAll('input')];[a,b,c,d].forEach(x=>x.classList.remove('bad'));
+if(!p.id||ids.has(p.id)){e.push(`Row ${i+1}: Process ID is empty or duplicate.`);a.classList.add('bad')}ids.add(p.id);
+if(!(+p.at>=0)||!Number.isInteger(+p.at)||p.at===''){e.push(`${p.id}: Arrival must be an integer ≥ 0.`);b.classList.add('bad')}
+if(!(+p.bt>0)||!Number.isInteger(+p.bt)){e.push(`${p.id}: Burst must be an integer > 0.`);c.classList.add('bad')}
+if(!(+p.pr>0)||!Number.isInteger(+p.pr)){e.push(`${p.id}: Priority must be a positive integer.`);d.classList.add('bad')}});
+if(sel.has('RR')&&!(+$('#q').value>0&&Number.isInteger(+$('#q').value)))e.push('Time quantum must be a positive integer.');return e}
+/* ---- algorithms: each returns Gantt segments ---- */
+function push(g,id,s,e,m=1){const l=g[g.length-1];if(m&&l&&l.id===id&&l.end===s)l.end=e;else g.push({id,start:s,end:e})}
+function nonpre(ps,pick){const L=ps.map(p=>({...p})),g=[];let t=0,n=L.length;while(n){const a=L.filter(p=>!p.d&&p.at<=t);if(!a.length){const nx=Math.min(...L.filter(p=>!p.d).map(p=>p.at));push(g,null,t,nx);t=nx;continue}
+const p=a.sort(pick)[0];push(g,p.id,t,t+p.bt);t+=p.bt;p.d=1;n--}return g}
+const ALGF={FCFS:ps=>nonpre(ps,(a,b)=>a.at-b.at||cid(a,b)),SJF:ps=>nonpre(ps,(a,b)=>a.bt-b.bt||a.at-b.at||cid(a,b)),PRIO:ps=>nonpre(ps,(a,b)=>a.pr-b.pr||a.at-b.at||cid(a,b)),
+SRTF(ps){const L=ps.map(p=>({...p,r:p.bt})),g=[];let t=0,n=L.length;while(n){const a=L.filter(p=>p.r>0&&p.at<=t);if(!a.length){const nx=Math.min(...L.filter(p=>p.r>0).map(p=>p.at));push(g,null,t,nx);t=nx;continue}
+const p=a.sort((x,y)=>x.r-y.r||x.at-y.at||cid(x,y))[0];push(g,p.id,t,t+1);t++;if(--p.r==0)n--}return g},
+RR(ps,q){const L=ps.map(p=>({...p,r:p.bt})).sort((a,b)=>a.at-b.at||cid(a,b)),g=[],Q=[];let t=0,i=0,n=L.length;const adm=()=>{while(i<L.length&&L[i].at<=t)Q.push(L[i++])};
+while(n){adm();if(!Q.length){const nx=L[i].at;push(g,null,t,nx);t=nx;continue}const p=Q.shift(),d=Math.min(q,p.r);push(g,p.id,t,t+d,0);t+=d;p.r-=d;adm();p.r>0?Q.push(p):n--}return g}};
+function calc(k,g,ps){const rows=ps.map(p=>{const s=g.filter(x=>x.id===p.id),ct=s[s.length-1].end,tat=ct-p.at;return{...p,ct,tat,wt:tat-p.bt,rt:s[0].start-p.at}});
+const av=x=>rows.reduce((a,r)=>a+r[x],0)/rows.length,end=Math.max(...rows.map(r=>r.ct)),t0=Math.min(...rows.map(r=>r.at)),span=end-t0,busy=rows.reduce((a,r)=>a+r.bt,0);
+const run=g.filter(x=>x.id);let cs=0;for(let i=1;i<run.length;i++)if(run[i].id!==run[i-1].id)cs++;
+const w=av('wt'),fair=Math.sqrt(rows.reduce((a,r)=>a+(r.wt-w)**2,0)/rows.length);
+const star=rows.some(r=>r.wt>2*w&&r.wt>=5)&&['SJF','SRTF','PRIO'].includes(k);
+return{k,g,rows,wt:w,tat:av('tat'),rt:av('rt'),util:busy/span*100,thr:rows.length/span,cs,end,fair,star}}
+function run(){const e=validate();$('#err').innerHTML=e.map(x=>`<div>⚠ ${x}</div>`).join('');if(e.length)return;
+const ps=procs.map(p=>({id:p.id,at:+p.at,bt:+p.bt,pr:+p.pr}));cmap={};ps.forEach((p,i)=>cmap[p.id]=`hsl(${(i*137.5)%360} 70% 62%)`);
+$('#load').classList.remove('hide');setTimeout(()=>{R={};ORD.filter(k=>sel.has(k)).forEach(k=>R[k]=calc(k,ALGF[k](ps,+$('#q').value),ps));
+$('#load').classList.add('hide');$('#res').classList.remove('hide');cur=Object.keys(R)[0];tabs();$('#res').scrollIntoView({behavior:'smooth'})},450)}
+function tabs(){const ks=Object.keys(R);$('#tabs').innerHTML=ks.map(k=>`<div class="tab ${cur===k?'on':''}" onclick="cur='${k}';tabs()">${NM[k]}</div>`).join('')+(ks.length>1?`<div class="tab ${cur==='CMP'?'on':''}" onclick="cur='CMP';tabs()">Comparison</div>`:'');
+clearInterval(an.tm);an.tm=null;an.t=0;sortK='';cur==='CMP'?cmp():algView(cur)}
+function count(){document.querySelectorAll('[data-v]').forEach(el=>{const v=+el.dataset.v,d=+el.dataset.d,t0=performance.now();(function s(t){const p=Math.min(1,(t-t0)/700);el.textContent=(v*(1-(1-p)**3)).toFixed(d);if(p<1)requestAnimationFrame(s)})(t0)})}
+const stat=(l,v,d,u='')=>`<div class="stat"><small>${l}</small><div><span data-v="${v}" data-d="${d}">0</span> <u>${u}</u></div></div>`;
+function algView(k){const r=R[k],I=INFO[k];$('#view').innerHTML=`<div class="card" style="margin-bottom:16px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2>${NM[k]}</h2><span class="tag">${I[0]}</span></div><p class="mut" style="margin:8px 0 0">${I[1]}${k==='RR'?` Quantum = ${$('#q').value}.`:''}</p>
+${r.star?'<p class="wa">⚠ Starvation warning: some processes wait more than twice the average.</p>':''}</div>
+<div class="cards">${stat('Avg Waiting Time',r.wt,2,'ms')}${stat('Avg Turnaround',r.tat,2,'ms')}${stat('Avg Response',r.rt,2,'ms')}${stat('Context Switches',r.cs,0)}${stat('CPU Utilization',r.util,1,'%')}${stat('Throughput',r.thr,3,'proc/ms')}${stat('Total Time',r.end,0,'ms')}</div>
+<div class="card" style="margin-bottom:16px"><h3>CPU Execution</h3><div class="cpu"><div id="cpu"></div><div id="qs"></div></div>
+<div class="ctl"><button class="btn sm" id="pp" onclick="play()">▶ Play</button><button class="btn s sm" onclick="seek(0)">⟲ Restart</button><button class="btn s sm" onclick="seek(an.t-1)">◀ Prev</button><button class="btn s sm" onclick="seek(an.t+1)">Next ▶</button>
+<select onchange="an.sp=+this.value;an.tm&&(play(),play())"><option value=".5">0.5x</option><option value="1" selected>1x</option><option value="2">2x</option><option value="4">4x</option></select></div></div>
+<div class="card" style="margin-bottom:16px"><h3>Gantt Chart</h3><div class="gantt" id="gn">${r.g.map((s,i)=>`<div class="gc" style="flex-grow:${s.end-s.start}"><div class="gb ${s.id?'':'idle'}" style="${s.id?'background:'+cmap[s.id]:''};animation-delay:${i*.08}s">${s.id||'IDLE'}</div><span class="gt">${s.start}</span>${i==r.g.length-1?`<span class="gt e">${s.end}</span>`:''}</div>`).join('')}</div></div>
+<div class="card" style="margin-bottom:16px"><h3>Calculation Table <small class="mut">(click headers to sort)</small></h3><div class="sc" id="ct"></div></div>
+<div class="card"><h3>About ${NM[k]}</h3><p><b>Type:</b> ${I[0]}<br><b>Selection rule:</b> ${I[1]}</p><div class="two"><div><b class="ok">Advantages</b><ul>${I[2].map(x=>`<li>${x}</li>`).join('')}</ul></div><div><b class="wa">Disadvantages</b><ul>${I[3].map(x=>`<li>${x}</li>`).join('')}</ul></div></div><p><b>Best use case:</b> ${I[4]}</p></div>`;
+ctab();step();count()}
+function ctab(){const r=R[cur];let rows=[...r.rows];if(sortK)rows.sort((a,b)=>sortK==='id'?cid(a,b):a[sortK]-b[sortK]);const H=[['id','Process'],['at','Arrival Time'],['bt','Burst Time'],['ct','Completion Time'],['tat','Turnaround Time'],['wt','Waiting Time'],['rt','Response Time']];
+$('#ct').innerHTML=`<table><thead><tr>${H.map(h=>`<th class="so" onclick="sortK='${h[0]}';ctab()">${h[1]}${sortK===h[0]?' ↑':''}</th>`).join('')}</tr></thead><tbody>${rows.map(x=>`<tr><td><span class="chip" style="background:${cmap[x.id]};margin:0">${x.id}</span></td><td>${x.at}</td><td>${x.bt}</td><td>${x.ct}</td><td>${x.tat}</td><td>${x.wt}</td><td>${x.rt}</td></tr>`).join('')}
+<tr style="font-weight:700"><td>Average</td><td></td><td></td><td></td><td>${f2(r.tat)}</td><td>${f2(r.wt)}</td><td>${f2(r.rt)}</td></tr></tbody></table>`}
+function step(){const r=R[cur],t=an.t,g=r.g;if(!$('#cpu'))return;const run=g.find(s=>s.id&&s.start<=t&&t<s.end);
+const ex=id=>g.filter(s=>s.id===id).reduce((a,s)=>a+Math.max(0,Math.min(s.end,t)-s.start),0);
+const done=r.rows.filter(x=>x.ct<=t),rdy=r.rows.filter(x=>x.at<=t&&x.ct>t&&(!run||x.id!==run.id)).map(x=>({x,k:Math.max(x.at,...g.filter(s=>s.id===x.id&&s.end<=t).map(s=>s.end))})).sort((a,b)=>a.k-b.k).map(o=>o.x);
+const ch=x=>`<span class="chip" style="background:${cmap[x.id]}">${x.id}</span>`;
+$('#cpu').innerHTML=`<div class="mut">Current Time: <b style="color:var(--tx);font-size:20px">${t}</b></div><div class="run ${run?'':'idle'}" style="margin-top:8px${run?';border-color:'+cmap[run.id]:''}">${run?`<small class="mut">Currently Executing</small><b style="color:${cmap[run.id]}">${run.id}</b>Remaining: ${r.rows.find(x=>x.id===run.id).bt-ex(run.id)}`:`<b>${t>=r.end?'DONE':'IDLE'}</b>`}</div>`;
+$('#qs').innerHTML=`<p class="mut" style="margin:0">READY QUEUE</p><div style="min-height:40px">${rdy.map(ch).join('')||'<span class="mut">empty</span>'}</div><p class="mut" style="margin:10px 0 0">COMPLETED</p><div style="min-height:40px">${done.map(x=>'✓ '+ch(x)).join('')||'<span class="mut">none yet</span>'}</div>`;
+document.querySelectorAll('#gn .gb').forEach((el,i)=>{const s=g[i];el.classList.toggle('past',s.end<=t);el.classList.toggle('cur',s.start<=t&&t<s.end)});}
+function seek(t){an.t=Math.max(0,Math.min(R[cur].end,t));step();if(an.t>=R[cur].end&&an.tm)play()}
+function play(){const b=$('#pp');if(an.tm){clearInterval(an.tm);an.tm=null;b.textContent='▶ Play';return}if(an.t>=R[cur].end)an.t=0;b.textContent='⏸ Pause';
+an.tm=setInterval(()=>{if(an.t>=R[cur].end){play();return}an.t++;step();if(an.t>=R[cur].end)play()},800/an.sp)}
+/* ---- comparison & recommendation ---- */
+const MET=[['wt','Waiting Time',1],['tat','Turnaround Time',1],['rt','Response Time',1],['cs','Low Overhead',1],['fair','Fairness',1],['util','CPU Utilization',0]];
+function best(m,low=1){const v=Object.values(R).map(r=>r[m]);return low?Math.min(...v):Math.max(...v)}
+function cmp(){const ks=Object.keys(R),cl=(m,low=1,d=2)=>ks.map(k=>`<td class="${R[k][m]===best(m,low)?'best':''}">${R[k][m].toFixed(d)}</td>`);
+const rowsT=ks.map(k=>{const r=R[k],c=(m,low,d)=>`<td class="${r[m]===best(m,low)?'best':''}">${r[m].toFixed(d)}</td>`;return`<tr><td><b>${NM[k]}</b></td>${c('wt',1,2)}${c('tat',1,2)}${c('rt',1,2)}${c('util',0,1)+c('thr',0,3)+c('cs',1,0)}</tr>`}).join('');
+const charts=[['wt','Average Waiting Time'],['tat','Average Turnaround Time'],['rt','Average Response Time'],['cs','Context Switches']].map(([m,t])=>{const mx=Math.max(...ks.map(k=>R[k][m]))||1;return`<div class="card"><h3>${t}</h3>${ks.map(k=>`<div class="bar" title="${NM[k]}: ${f2(R[k][m])}"><span>${NM[k]}</span><div class="tr"><div class="f ${R[k][m]===best(m)?'b':''}" data-w="${R[k][m]/mx*100}"></div></div><span>${f2(R[k][m])}</span></div>`).join('')}</div>`}).join('');
+$('#view').innerHTML=`<div class="card" style="margin-bottom:16px"><h3>Algorithm Comparison <small class="mut">(best values highlighted)</small></h3><div class="sc"><table><thead><tr><th>Algorithm</th><th>Avg WT</th><th>Avg TAT</th><th>Avg RT</th><th>CPU Util %</th><th>Throughput</th><th>Context Switches</th></tr></thead><tbody>${rowsT}</tbody></table></div></div>
+<div class="two"><div class="card rec" id="rec"></div><div class="card"><h3>Performance Preference</h3>${MET.map(m=>`<div class="sl"><span class="mut">${m[1]}</span><input type="range" min="0" max="10" value="${W[m[0]]}" oninput="W['${m[0]}']=+this.value;this.nextElementSibling.textContent=this.value;rec()"><span>${W[m[0]]}</span></div>`).join('')}<div id="wins" style="margin-top:14px"></div></div></div>
+<div class="two">${charts}</div>`;rec();setTimeout(()=>document.querySelectorAll('.f').forEach(e=>e.style.width=e.dataset.w+'%'),60)}
+function rec(){const ks=Object.keys(R),sw=Object.values(W).reduce((a,b)=>a+b,0),part={};
+MET.forEach(([m,,low])=>{const v=ks.map(k=>R[k][m]),mn=Math.min(...v),mx=Math.max(...v),d=mx-mn||1;ks.forEach(k=>(part[k]=part[k]||{})[m]=low?1-(R[k][m]-mn)/d:(R[k][m]-mn)/d)});
+const sc=ks.map(k=>({k,s:sw?MET.reduce((a,[m])=>a+W[m]*part[k][m],0)/sw*100:0})).sort((a,b)=>b.s-a.s),w=sc[0].k;
+const bestM=MET.filter(([m,,low])=>W[m]>0&&R[w][m]===best(m,low)&&ks.some(k=>R[k][m]!==R[w][m])),worstM=MET.filter(([m,,low])=>{const v=ks.map(k=>R[k][m]);return R[w][m]===(low?Math.max(...v):Math.min(...v))&&Math.max(...v)!==Math.min(...v)});
+$('#rec').innerHTML=`<h3>🏆 Recommended Algorithm</h3><h2>${NM[w]}</h2><span class="mut">Weighted score ${f2(sc[0].s)}/100</span><p><b>Why?</b></p>${bestM.map(([,n])=>`<div class="ok">✓ Best ${n}</div>`).join('')||'<div class="ok">✓ Best overall balance for your preferences</div>'}
+<p><b>Trade-offs:</b></p>${worstM.map(([,n])=>`<div class="wa">⚠ Weakest ${n}</div>`).join('')}<div class="wa">⚠ ${INFO[w][3][0]}</div>
+<p class="mut" style="font-size:12px">Ranking: ${sc.map(x=>`${NM[x.k]} ${f2(x.s)}`).join(' • ')}</p>`;
+const nm=(m,low=1)=>ks.filter(k=>R[k][m]===best(m,low)).map(k=>NM[k]).join(', ');let imp='';
+if(R.PRIO){const top=Math.min(...procs.map(p=>+p.pr)),id=procs.find(p=>+p.pr===top).id,v=ks.map(k=>R[k].rows.find(r=>r.id===id).wt),mn=Math.min(...v);imp=ks.filter((k,i)=>v[i]===mn).map(k=>NM[k]).join(', ')+` (for ${id})`}
+$('#wins').innerHTML=[['Lowest Waiting Time',nm('wt')],['Lowest Turnaround Time',nm('tat')],['Best Response Time',nm('rt')],['Lowest Scheduling Overhead',nm('cs')],['Best Fairness (lowest WT spread)',nm('fair')],imp&&['Best for Important Tasks',imp]].filter(Boolean).map(x=>`<div class="win"><span class="mut">${x[0]}</span><b>${x[1]}</b></div>`).join('')}
+/* landing bg */
+$('#bg').innerHTML=Array.from({length:6},(_,r)=>`<div style="animation-duration:${10+r*3}s">${Array.from({length:9},(_,i)=>`<i style="flex:${1+(i*7+r*3)%5};background:hsl(${(i*47+r*30)%360} 70% 60%)"></i>`).join('')}</div>`).join('');
+</script></body></html>
